@@ -23,9 +23,8 @@ public class JsonDisplayOrder {
 	 * http://yh9092.hatenablog.com/entry/2017/11/16/232835
 	 */
 	public JSONObject getJson() {
-		System.out.println("getJson()");
 
-		// 既に展開済みの場合、再読み込みを行わない。
+		// 既に展開済みの場合、Jsonファイルの再読み込みを行わない。
 		if (null != jsonObject) {
 			return jsonObject;
 		}
@@ -66,10 +65,10 @@ public class JsonDisplayOrder {
 			reader.close();
 			return jsonStr;
 		} catch (FileNotFoundException e) {
-			System.out.println(e);
+//			System.out.println(e);
 			return null;
 		} catch (IOException e){
-			System.out.println(e);
+//			System.out.println(e);
 			return null;
 		}
 	}

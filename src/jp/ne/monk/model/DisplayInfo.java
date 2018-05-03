@@ -30,6 +30,7 @@ public class DisplayInfo {
 //		JSONObject jsonObject = getJsonElement(nowIndexList);
 //		System.out.println("[" + nowIndexList + "]jsonObject:" + jsonObject);
 
+//		System.out.println("getIncrementIndexList:" + getIncrementIndexList(mNowIndexList));
 		System.out.println("getIncrementPageIndexList:" + getIncrementPageIndexList(mNowIndexList));
 
 	}
@@ -48,8 +49,8 @@ public class DisplayInfo {
 	}
 
 	/**
-	 * Indexで指定された要素の JSONObject を返却する。
-	 * Indexで指定した要素が存在しない場合、及び、Servlet情報がない場合は null。
+	 * Indexで指定された要素の JSONObject を返却する。<br>
+	 * Indexで指定した要素が存在しない場合 null。
 	 * @param indexList jsonの要素を一意に決めるためのIndex情報（nowIndex等）
 	 * @return
 	 */
@@ -75,6 +76,18 @@ public class DisplayInfo {
 			}
 		}
 		System.out.println("jsonObject:" + jsonObject);
+
+		return jsonObject;
+	}
+
+	/**
+	 * Indexで指定された要素の JSONObject を返却する。<br>
+	 * Indexで指定した要素が存在しない場合、及び、Servlet情報がない場合は null。
+	 * @param indexList jsonの要素を一意に決めるためのIndex情報（nowIndex等）
+	 * @return
+	 */
+	private JSONObject getJsonServletElement(List<String> indexList) {
+		JSONObject jsonObject = getJsonElement(indexList);
 		try {
 			jsonObject.getString("servlet");
 		} catch (JSONException e) {
@@ -102,12 +115,11 @@ public class DisplayInfo {
 			System.out.println("nextIndexList:" + nextIndexList);
 			if (nextIndexList.equals(nowIndexList)) {
 				// 一周したら抜ける
-				// TODO 抜けてくれていない
+				// TODO BUG 抜けてくれていない
 				nextIndexList = null;
 				break;
 			}
-			jsonObject = getJsonElement(nextIndexList);
-			System.out.println("getJsonElement:" + jsonObject);
+			jsonObject = getJsonServletElement(nextIndexList);
 		}
 
 		return nextIndexList;
@@ -120,6 +132,8 @@ public class DisplayInfo {
 	 * @return 一つ進めたIndex情報
 	 */
 	private List<String> getIncrementIndexList(List<String> nowIndexList) {
+		System.out.println("getIncrementIndexList() nowIndexList:" + nowIndexList);
+
 		List<String> nextIndexList = new ArrayList<>(nowIndexList);
 
 		// Jsonの末尾かどうか
@@ -127,18 +141,16 @@ public class DisplayInfo {
 
 		// １階層下の要素を確認
 		nextIndexList.add("1");
-		System.out.println("indexList:" + nextIndexList);
+//		System.out.println("nextIndexList:" + nextIndexList);
 		JSONObject jsonObjectSub = getJsonElement(nextIndexList);
 		if (null == jsonObjectSub) {
 			// 「indexList.add("1");」で追加した要素を削除
 			nextIndexList.remove(nextIndexList.size() - 1);
 
 			// １階層下に要素が存在しない場合、同階層の１つ後の要素を確認
-			// TODO BUG
 			for (int i = nowIndexList.size() - 1; i >= 0; i--) {
 				String nextIndex = String.valueOf(Integer.parseInt(nextIndexList.get(i)) + 1);
 				nextIndexList.set(i, nextIndex);
-				System.out.println("indexList:" + nextIndexList);
 
 				JSONObject jsonObjectNext = getJsonElement(nextIndexList);
 				if (null == jsonObjectNext) {
@@ -156,7 +168,7 @@ public class DisplayInfo {
 		}
 
 		if (isEndofJson) {
-			// Jsonの末尾の場合、[1]を返却
+			// Jsonの末尾の場合、IndexList [1]を返却
 			nextIndexList.clear();
 			nextIndexList.add(0, "1");
 		}
