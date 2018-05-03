@@ -9,9 +9,4 @@
     <welcome-file>default.htm</welcome-file>
     <welcome-file>default.jsp</welcome-file>
   </welcome-file-list>
-
-  <listener>
-    <display-name>TestListner</display-name>
-    <listener-class>jp.ne.monk.listener.TestListener</listener-class>
-  </listener>
 </web-app>

@@ -10,7 +10,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 /**
- * Servlet implementation class Page01
+ * Servlet implementation class Page02
+ * http://localhost:8080/TestWeb/Page02
  */
 @WebServlet("/Page02")
 public class Page02 extends HttpServlet {

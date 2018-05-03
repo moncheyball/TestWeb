@@ -10,8 +10,11 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import jp.ne.monk.model.DisplayInfo;
+
 /**
  * Servlet implementation class Page01
+ * http://localhost:8080/TestWeb/Page01
  */
 @WebServlet("/Page01")
 public class Page01 extends HttpServlet {
@@ -39,6 +42,14 @@ public class Page01 extends HttpServlet {
         String disp = "/WEB-INF/jsp/Page01.jsp";
         RequestDispatcher dispatch = request.getRequestDispatcher(disp);
         dispatch.include(request, response);
+
+
+
+//        JsonDisplayOrder order = new JsonDisplayOrder();
+//        order.getJson();
+
+        DisplayInfo info = new DisplayInfo();
+        info.test();
 	}
 
 	/**
