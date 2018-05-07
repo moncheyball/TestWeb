@@ -7,15 +7,13 @@
 				"3": {"type":"page", "servlet":"/Page113", "time":3},
 				"4": {"type":"page", "servlet":"/Page114", "time":3}
 				}},
-			"2": {"type":"page", "servlet":"/Page12", "time":3}
+			"2": {"type":"loop", "count":3, "sub":{
+				"1": {"type":"page", "servlet":"/Page2", "time":3}
+				}}
 			}},
-		"2": {"type":"page", "servlet":"/Page2", "time":10},
-		"3": {"type":"loop", "count":2, "sub":{
-			"1": {"type":"loop", "count":3, "sub":{
-				"1": {"type":"page", "servlet":"/Page111", "time":3},
-				"2": {"type":"page", "servlet":"/Page112", "time":3},
-				"3": {"type":"page", "servlet":"/Page113", "time":3},
-				"4": {"type":"page", "servlet":"/Page114", "time":3}
+		"2": {"type":"loop", "count":1, "sub":{
+			"1": {"type":"loop", "count":1, "sub":{
+				"1": {"type":"page", "servlet":"/Page3", "time":3}
 				}}
 			}},
 	}
