@@ -7,20 +7,32 @@ import java.util.List;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import jp.ne.monk.constfile.ConstJsonDisplayOrder;
+
 public class DisplayInfo {
 
+	/**
+	 * 現在の "type":"loop" 要素のIndex情報<br>
+	 * JSON の Key を格納する（例：[1, 1, 1]）
+	 */
 	private static List<String> mNowIndexList = null;
 
+	/**
+	 *  "type":"loop" 要素のループ回数を格納したHashMap<br>
+	 *  （例：Index情報 [1, 1] のループ回数取得する場合は Key"11"を指定する）
+	 */
 	private static HashMap<String, Integer> mLoopCounterMap = new HashMap<String, Integer>();
 
-	private static final String JSON_TYPE_LOOP = "loop";
-	private static final String JSON_TYPE_PAGE = "page";
-
-
+	/**
+	 * コンストラクタ
+	 */
 	public DisplayInfo() {
 
 	}
 
+	/**
+	 * 動作確認用
+	 */
 	public void test() {
 
 		if (null == mNowIndexList) {
@@ -31,20 +43,15 @@ public class DisplayInfo {
 		}
 		System.out.println("nowIndexList:" + mNowIndexList);
 
-//		JSONObject jsonObject = getJsonElement(nowIndexList);
-//		System.out.println("[" + nowIndexList + "]jsonObject:" + jsonObject);
-
-//		System.out.println("getIncrementIndexList:" + getIncrementIndexList(mNowIndexList));
-//		System.out.println("getIncrementPageIndexList:" + getIncrementedPageIndexList(mNowIndexList));
-
 		for (int i = 0; i < 100; i++) {
 			mNowIndexList =  new ArrayList<>(getIncrementedServletIndexList(mNowIndexList));
 			System.out.println("**** getIncrementedServletIndexList:" + mNowIndexList);
 		}
-
 	}
-	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// ループカウンタ関連
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	/**
 	 * Index情報（nowIndex等）を文字列に変換<br>
 	 * 例：[1, 2, 3] => "123"
@@ -60,8 +67,8 @@ public class DisplayInfo {
 	}
 
 	/**
-	 * HashMapで管理しているループカウンタの値を取得
-	 * @param indexList
+	 * HashMapで管理しているループ回数の値を取得
+	 * @param indexList Index情報
 	 * @return
 	 */
 	private int getLoopCount(List<String> indexList) {
@@ -73,24 +80,30 @@ public class DisplayInfo {
 	}
 
 	/**
-	 * HashMapで管理しているループカウンタに値を設定
-	 * @param indexList
-	 * @param count
+	 * ループ回数をHashMapに格納
+	 * @param indexList Index情報
+	 * @param count ループ回数
 	 */
 	private void setLoopCount(List<String> indexList, int count) {
 		mLoopCounterMap.put(listToString(indexList), count);
 	}
 
+	/**
+	 * ループ回数をインクリメント
+	 * @param indexList Index情報
+	 */
 	private void incrementLoopCount(List<String> indexList) {
-		JSONObject jsonObject = getJsonLoopElement(indexList, JSON_TYPE_LOOP);
+		JSONObject jsonObject = getJsonElement(indexList, ConstJsonDisplayOrder.TYPE_LOOP);
 		if (null == jsonObject) {
 			System.out.println("incrementLoopCount() null == jsonObject");
 			return;
 		}
 		try {
-			int maxCount = jsonObject.getInt("count");
+			// ループ回数を更新
+			int maxCount = jsonObject.getInt(ConstJsonDisplayOrder.COUNT);
 			int count = getLoopCount(indexList);
 			int updateCount = (count + 1) % (maxCount + 1);
+			// HashMapに格納
 			setLoopCount(indexList, updateCount);
 			System.out.println("incrementLoopCount()" + indexList + " count:" + count + ", updateCount:" + updateCount + ", maxCount:" + maxCount);
 
@@ -101,38 +114,18 @@ public class DisplayInfo {
 	}
 
 	/**
-	 * HashMapで管理しているループカウンタがMax値であるか
+	 * ループ回数がMax値に達したか
 	 * @param indexList
 	 * @return ture:Max値に達している false:Max値に達していない
 	 */
 	private boolean isMaxedOutLoopCount(List<String> indexList) {
 		int count = getLoopCount(indexList);
+		// ループ回数"0"となっていた場合、Max値に達したと見なす。
 		return (count == 0);
 	}
 
-	private boolean BAKisMaxedOutLoopCount(List<String> indexList) {
-		int count = getLoopCount(indexList);
-		JSONObject jsonObject = getJsonElement(indexList);
-		if (null == jsonObject) {
-			System.out.println("isMaxedOutLoopCount() null == jsonObject");
-			return false;
-		}
-		try {
-			String type = jsonObject.getString("type");
-			if (!type.equals(JSON_TYPE_LOOP)) {
-				return false;
-			}
-			int maxCount = jsonObject.getInt("count");
-			boolean isMaxOut = (count >= (maxCount - 1));
-			System.out.println("isMaxedOutLoopCount()" + indexList +" count:" + count + " ,maxCount:" + maxCount + " ,return:" + isMaxOut);
-			return isMaxOut;
-		} catch (JSONException e) {
-			e.printStackTrace();
-		}
-		return false;
-	}
-
-
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// Index情報更新
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	/**
 	 * 次に表示するServlet情報を含むJsonObjectのIndex情報を返却する
@@ -146,14 +139,14 @@ public class DisplayInfo {
 		while (null == jsonObject) {
 			// 次の要素のIndexListを取得して、"page"要素であれば確定
 			nextIndexList = getIncrementedIndexList(nextIndexList);
-			jsonObject = getJsonLoopElement(nextIndexList, "page");
+			jsonObject = getJsonElement(nextIndexList, "page");
 		}
 		return nextIndexList;
 	}
 
-
 	/**
-	 * Index情報を一つ進める（"page"/"loop"を問わない）
+	 * Index情報を一つ進める（"page"/"loop"を問わない）<br>
+	 * ※getIncrementedServletIndexList() からのみ使用する想定。
 	 * @param nowIndexList 現在のIndex情報
 	 * @return 一つ進めたIndex情報
 	 */
@@ -161,12 +154,11 @@ public class DisplayInfo {
 		List<String> nextIndexList = new ArrayList<>(nowIndexList);
 
 		String type = getTypeJsonElement(nextIndexList);
-
 		switch (type) {
-		case JSON_TYPE_LOOP:
+		case ConstJsonDisplayOrder.TYPE_LOOP:
 			nextIndexList = getIncrementedLoopIndexList(nextIndexList);
 			break;
-		case JSON_TYPE_PAGE:
+		case ConstJsonDisplayOrder.TYPE_PAGE:
 			nextIndexList = getIncrementedPageIndexList(nextIndexList);
 			break;
 		default:
@@ -174,15 +166,14 @@ public class DisplayInfo {
 			nextIndexList = null;
 			break;
 		}
-
 		return nextIndexList;
 	}
 
-
 	/**
 	 * 現在のIndex情報が"loop"である場合の、Index情報を一つ進める処理。<br>
-	 * ※"loop" 以外のIndex情報では使用不可。
-	 * @param nowIndexList
+	 * ※"loop" 以外のIndex情報では使用不可。<br>
+	 * ※getIncrementedIndexList() からのみ使用する想定。
+	 * @param nowIndexList 現在のIndex情報
 	 * @return
 	 */
 	private List<String> getIncrementedLoopIndexList(List<String> nowIndexList) {
@@ -199,13 +190,13 @@ public class DisplayInfo {
 			nextIndexList.set(end, nextIndex);
 
 			String type = getTypeJsonElement(nextIndexList);
-			if (null != type && type.equals(JSON_TYPE_LOOP)) {
+			if (null != type && type.equals(ConstJsonDisplayOrder.TYPE_LOOP)) {
 				// 同階層に次の要素有のため Index情報確定
 			} else {
 				// 一階層上の要素有無確認
 				nextIndexList.remove(end);
 				type = getTypeJsonElement(nextIndexList);
-				if (null != type && type.equals(JSON_TYPE_LOOP)) {
+				if (null != type && type.equals(ConstJsonDisplayOrder.TYPE_LOOP)) {
 					// 一階層上の要素を返却
 				} else {
 					// 同階層に次、及び、一階層上に要素なし。=> Jsonの末尾 => IndexList [1]を返却
@@ -223,8 +214,9 @@ public class DisplayInfo {
 
 	/**
 	 * 現在のIndex情報が"page"である場合の、Index情報を一つ進める処理。<br>
-	 * ※"page" 以外のIndex情報では使用不可。
-	 * @param nowIndexList
+	 * ※"page" 以外のIndex情報では使用不可。<br>
+	 * ※getIncrementedIndexList() からのみ使用する想定。
+	 * @param nowIndexList 現在のIndex情報
 	 * @return
 	 */
 	private List<String> getIncrementedPageIndexList(List<String> nowIndexList) {
@@ -237,7 +229,7 @@ public class DisplayInfo {
 		nextIndexList.set(end, nextIndex);
 
 		String type = getTypeJsonElement(nextIndexList);
-		if (null != type && type.equals(JSON_TYPE_PAGE)) {
+		if (null != type && type.equals(ConstJsonDisplayOrder.TYPE_PAGE)) {
 			// "page"要素有のため Index情報確定
 		} else {
 			// 一階層上の"loop"要素のIndex情報を返却。  例 [1, 1, 1] => [1, 1]
@@ -247,146 +239,9 @@ public class DisplayInfo {
 		return nextIndexList;
 	}
 
-
-
-	/**
-	 * Index情報を一つ進める（"page"/"loop"を問わない）
-	 * @param nowIndexList 現在のIndex情報
-	 * @return 一つ進めたIndex情報
-	 */
-	private List<String> BAKgetIncrementedIndexList(List<String> nowIndexList) {
-		System.out.println("getIncrementIndexList() nowIndexList:" + nowIndexList);
-
-		List<String> nextIndexList = new ArrayList<>(nowIndexList);
-
-		// Jsonの末尾かどうか
-		boolean isEndofJson = true;
-
-
-		// １階層下の要素を確認
-		nextIndexList.add("1");
-		JSONObject jsonObjectChiled = getJsonChildElement(nextIndexList);
-		if (null == jsonObjectChiled) {
-			// 「indexList.add("1");」で追加した要素を削除
-			nextIndexList.remove(nextIndexList.size() - 1);
-
-			// １階層下に要素が存在しない場合、同階層の１つ後の要素を確認
-			//   例：現在[1, 1]とする。[1, 1, 1]がない場合、[1, 2]を確認する。
-			int i = nowIndexList.size() - 1;
-			String nextIndex = String.valueOf(Integer.parseInt(nextIndexList.get(i)) + 1);
-			nextIndexList.set(i, nextIndex);
-
-			JSONObject jsonObjectNext = getJsonElement(nextIndexList);
-			if (null == jsonObjectNext) {
-				// jsonObject が存在しない場合、一つ上の要素のループカウンタを確認する。
-				nextIndexList.remove(i);
-				if (isMaxedOutLoopCount(nextIndexList)) {
-					// ループカウンタがMAX値である場合、末尾の要素を削除して、一つ上の要素確認しにいく。
-					//   例：現在[1, 3]とする。[1, 3]が末尾の要素である場合、[2]。
-					String nextIndexA = String.valueOf(Integer.parseInt(nextIndexList.get(i-1)) + 1);
-					nextIndexList.set(i-1, nextIndexA);
-				} else {
-					//インクリメント★
-					incrementLoopCount(nextIndexList);
-
-					// ループカウンタがMAX値である場合、末尾の要素を削除して、一つ上の要素確認しにいく。
-					//   例：現在[1, 3]とする。[1, 3]が末尾の要素である場合、[1, 1]を確認しに行く。
-					nextIndexList.add(i, "1");
-				}
-				jsonObjectNext = getJsonElement(nextIndexList);
-				if (null == jsonObjectNext) {
-					// jsonObject が存在した場合、確定
-					isEndofJson = false;
-				}
-			} else {
-				// jsonObject が存在した場合、確定
-				isEndofJson = false;
-			}
-
-		} else {
-			// １階層下に要素があった場合、確定
-			isEndofJson = false;
-		}
-
-		if (isEndofJson) {
-			// Jsonの末尾の場合、IndexList [1]を返却
-			nextIndexList.clear();
-			nextIndexList.add(0, "1");
-		}
-
-		return nextIndexList;
-	}
-
-//	private void getIncrementedIndexList
-
-
-	/**
-	 * Indexで指定された要素の JSONObject を返却する。<br>
-	 * Indexで指定した要素が存在しない場合、及び、Servlet情報がない場合は null。
-	 * @param indexList jsonの要素を一意に決めるためのIndex情報（nowIndex等）
-	 * @return
-	 */
-	private JSONObject getJsonServletElement(List<String> indexList) {
-		JSONObject jsonObject = getJsonChildElement(indexList);
-		try {
-			jsonObject.getString("servlet");
-		} catch (JSONException e) {
-			// 異常値のため null を返却
-			// "type":"page" でない（"servlet" を含まない場合）場合、nullを返却
-//			System.out.println(e);
-			return null;
-		}
-
-		return jsonObject;
-	}
-
-	/**
-	 * type が一致していた場合に、indexList で指定したJSONObjectを返却<br>
-	 * type が不一致、または、JSONObjectが取得できなかった場合は null を返却
-	 * @param indexList
-	 * @param type "loop"または"page"
-	 * @return
-	 */
-	private JSONObject getJsonLoopElement(List<String> indexList, String type) {
-		JSONObject jsonObject = getJsonElement(indexList);
-		try {
-			String typeValue = jsonObject.getString("type");
-			if (typeValue.equals(type)) {
-				return jsonObject;
-			}
-		} catch (JSONException e) {
-			// 異常値のため null を返却
-			System.out.println(e);
-			return null;
-		}
-
-		return null;
-	}
-
-	/**
-	 * Index情報で指定した要素の"type"を返却する
-	 * @param indexList Index情報
-	 * @return "loop"/"page". 取得できなかった場合は null
-	 */
-	private String getTypeJsonElement(List<String> indexList) {
-
-		String type = null;
-		JSONObject jsonObject = getJsonElement(indexList);
-		if (null == jsonObject) {
-			return null;
-		}
-		try {
-			if (jsonObject.has("type")) {
-				type = jsonObject.getString("type");
-			}
-		} catch (JSONException e) {
-			// TODO 自動生成された catch ブロック
-			e.printStackTrace();
-		}
-		return type;
-	}
-
-
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// JSON取得関連
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	/**
 	 * Indexで指定された要素の JSONObject を返却する。<br>
 	 * Indexで指定した要素が存在しない場合 null。
@@ -400,52 +255,66 @@ public class DisplayInfo {
 
 		for (String index: indexList) {
 			try {
-				if(jsonObject.has("sub")) {
+				if(jsonObject.has(ConstJsonDisplayOrder.SUB)) {
 					// "sub"要素を持っている場合、"sub"要素を取得してから index の要素を確認する
-					jsonObject = jsonObject.getJSONObject("sub");
+					jsonObject = jsonObject.getJSONObject(ConstJsonDisplayOrder.SUB);
 				}
 				jsonObject = jsonObject.getJSONObject(index);
 			} catch (JSONException e) {
 				// index が存在しない場合は、存在しないデータとして null を返却
-				System.out.println(e + " indexList" + indexList);
+				System.out.println(e + " indexList:" + indexList);
 				return null;
 			}
 		}
-//		System.out.println("jsonObject:" + jsonObject);
-
 		return jsonObject;
 	}
 
 	/**
-	 * Indexで指定された要素の JSONObject を返却する。<br>
-	 * Indexで指定した要素が存在しない場合 null。
+	 * type が一致していた場合に、indexList で指定したJSONObjectを返却<br>
+	 * type が不一致、または、JSONObjectが取得できなかった場合は null を返却
 	 * @param indexList jsonの要素を一意に決めるためのIndex情報（nowIndex等）
+	 * @param type "loop"または"page"
 	 * @return
 	 */
-	private JSONObject getJsonChildElement(List<String> indexList) {
-
-		JsonDisplayOrder order = new JsonDisplayOrder();
-		JSONObject jsonObject = order.getJson();
-
-		for (String index: indexList) {
-			try {
-				jsonObject = jsonObject.getJSONObject(index);
-			} catch (JSONException e) {
-				// index が存在しない場合は、存在しないデータとして null を返却
-//				System.out.println(e);
-				return null;
-			}
-			try {
-				// "type":"loop" 用に "sub"(一つ下の階層)を取得
-				jsonObject = jsonObject.getJSONObject("sub");
-			} catch (JSONException e) {
-				// "type":"page" の("sub"がない)場合は JSONException となるが処理継続。
-//				System.out.println(e);
-			}
+	private JSONObject getJsonElement(List<String> indexList, String type) {
+		JSONObject jsonObject = getJsonElement(indexList);
+		if (null == jsonObject) {
+			return null;
 		}
-//		System.out.println("jsonObject:" + jsonObject);
+		try {
+			String typeValue = jsonObject.getString(ConstJsonDisplayOrder.TYPE);
+			if (typeValue.equals(type)) {
+				return jsonObject;
+			}
+		} catch (JSONException e) {
+			// 異常値のため null を返却
+			System.out.println(e + " indexList:" + indexList + ", type:" + type);
+			return null;
+		}
 
-		return jsonObject;
+		return null;
+	}
+
+	/**
+	 * Index情報で指定した要素の"type"を返却する
+	 * @param indexList Index情報
+	 * @return "loop"/"page"を返却。JSONデータが取得できなかった場合は nullを返却
+	 */
+	private String getTypeJsonElement(List<String> indexList) {
+		String type = null;
+		JSONObject jsonObject = getJsonElement(indexList);
+		if (null == jsonObject) {
+			return null;
+		}
+		try {
+			if (jsonObject.has(ConstJsonDisplayOrder.TYPE)) {
+				type = jsonObject.getString(ConstJsonDisplayOrder.TYPE);
+			}
+		} catch (JSONException e) {
+			System.out.println(e + " indexList:" + indexList);
+			return null;
+		}
+		return type;
 	}
 
 }
